@@ -1,0 +1,11 @@
+FROM ubuntu:22.04
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y wget unzip libgtk-3-0 python3-pip && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+RUN wget https://github.com/prusa3d/PrusaSlicer/releases/download/version_2.7.4/PrusaSlicer-2.7.4-linux-x64-GTK3-202309221336.AppImage -O ps.AppImage && \
+    chmod +x ps.AppImage && \
+    ./ps.AppImage --appimage-extract && \
+    ln -s /app/squashfs-root/AppRun /usr/local/bin/prusa-slicer
+COPY . .
+RUN pip3 install -r requirements.txt
+CMD ["uvicorn", "app_main:app", "--host", "0.0.0.0", "--port", "8000"]
