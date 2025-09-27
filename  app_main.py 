@@ -1,0 +1,18 @@
+from fastapi import FastAPI, File, UploadFile, HTTPException
+from app_slicer import estimate_from_zip
+from app_models import EstimateResponse
+import tempfile, os
+
+app = FastAPI(title="Prusa Estimator")
+
+@app.post("/estimate", response_model=EstimateResponse)
+async def estimate(file: UploadFile = File(...)):
+    if not file.filename.endswith(".zip"):
+        raise HTTPException(400, "Only .zip files allowed")
+    with tempfile.NamedTemporaryFile(suffix=".zip", delete=False) as tmp:
+        tmp.write(await file.read())
+        path = tmp.name
+    try:
+        return EstimateResponse(results=estimate_from_zip(path))
+    finally:
+        os.unlink(path)
