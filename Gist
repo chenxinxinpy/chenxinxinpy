@@ -1,0 +1,15 @@
+# create_gist.sh
+TOKEN="your_github_token"
+curl -X POST \
+  -H "Authorization: token $TOKEN" \
+  -d '{
+    "description": "PrusaSlicer Estimator API - Full Project",
+    "public": true,
+    "files": {
+      "README.md": { "content": "# PrusaSlicer Estimator API\n..." },
+      "requirements.txt": { "content": "fastapi==0.110.0\n..." },
+      "app_main.py": { "content": "from fastapi import FastAPI..." }
+      // ... 其他文件
+    }
+  }' \
+  https://api.github.com/gists
