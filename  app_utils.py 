@@ -1,0 +1,10 @@
+import zipfile, tempfile
+from pathlib import Path
+
+def extract_zip_to_temp(zip_path):
+    d = Path(tempfile.mkdtemp())
+    with zipfile.ZipFile(zip_path) as z:
+        for m in z.infolist():
+            if not (m.filename.startswith("/") or ".." in m.filename):
+                z.extract(m, d)
+    return d
