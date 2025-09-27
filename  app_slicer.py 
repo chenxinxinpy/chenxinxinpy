@@ -1,0 +1,36 @@
+import os, re, subprocess, tempfile
+from pathlib import Path
+from app_utils import extract_zip_to_temp
+
+PRUSA_SLICER_CMD = os.getenv("PRUSA_SLICER_CMD", "prusa-slicer")
+CONFIG_PATH = "configs_default.ini"
+
+def run_slicer_on_stl(p):
+    stem = Path(p).stem
+    with tempfile.NamedTemporaryFile(suffix=".gcode", delete=False) as t:
+        g = t.name
+    try:
+        subprocess.run([PRUSA_SLICER_CMD, "--export-gcode", "--load", CONFIG_PATH, "--output", g, p], check=True, capture_output=True)
+        with open(g) as f:
+            h = f.read(4000)
+        t_match = re.search(r"; estimated printing time.*?=\s*(.+)", h)
+        w_match = re.search(r"; filament used $g$\s*=\s*([\d.]+)", h)
+        v_match = re.search(r"; filament used $cm3$\s*=\s*([\d.]+)", h)
+        return {
+            "model_name": stem,
+            "print_time_str": t_match.group(1).strip() if t_match else None,
+            "weight_g": float(w_match.group(1)) if w_match else None,
+            "volume_cm3": float(v_match.group(1)) if v_match else None,
+            "error": None
+        }
+    except Exception as e:
+        return {"model_name": stem, "error": str(e)}
+    finally:
+        if os.path.exists(g): os.remove(g)
+
+def estimate_from_zip(z):
+    d = extract_zip_to_temp(z)
+    res = [run_slicer_on_stl(str(f)) for f in d.glob("*.stl")]
+    import shutil
+    shutil.rmtree(d, ignore_errors=True)
+    return res
