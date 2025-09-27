@@ -1,0 +1,12 @@
+from pydantic import BaseModel
+from typing import List, Optional
+
+class EstimateResult(BaseModel):
+    model_name: str
+    print_time_str: Optional[str] = None
+    weight_g: Optional[float] = None
+    volume_cm3: Optional[float] = None
+    error: Optional[str] = None
+
+class EstimateResponse(BaseModel):
+    results: List[EstimateResult]
